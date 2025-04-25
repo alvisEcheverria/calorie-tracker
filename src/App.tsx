@@ -6,6 +6,8 @@ function App() {
 
   const [ state, dispatch ] = useReducer(activityReducer, initialState);
 
+  console.log(state);
+
   return (
     <>
       <header className="bg-lime-600 py-3">
