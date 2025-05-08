@@ -19,20 +19,30 @@ const initialState: Activity = {
 export const Form = ({ state, dispatch } : FormProps) => {
 
     const [ activity, setActivity ] = useState<Activity>(initialState);
+    const [tempCalories, setTempCalories] = useState<string>("");
 
     useEffect(()=> {
         if(state.activeId){
             const selectedActivity = state.activities.filter((stateActivity: Activity) => stateActivity.id === state.activeId)[0];
             setActivity(selectedActivity);
+            setTempCalories(selectedActivity.calories.toString());
+        } else{
+            setTempCalories("");
         }
     }, [state.activities, state.activeId]);
 
     const handleChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement> ): void=> {
-        const isNumberField = ["category", "calories"].includes(e.target.id);
-        setActivity({
-            ...activity,
-            [e.target.id]: isNumberField? +e.target.value : e.target.value 
-        });
+        const { id, value } = e.target;
+        if (id === "calories") {
+            setTempCalories(value);
+            const numericValue = value === "" ? 0 : +value;
+            setActivity({ ...activity, [id]: numericValue });
+        } else {
+            setActivity({
+                ...activity,
+                [id]: id === "category" ? +value : value,
+            });
+        } 
     };
 
     const isValidActivity = ()=> {
@@ -48,7 +58,9 @@ export const Form = ({ state, dispatch } : FormProps) => {
             ...initialState,
             id: uuidv4()
         });
-    }
+
+        setTempCalories("");
+    };
 
     return ( 
         <form 
@@ -82,7 +94,7 @@ export const Form = ({ state, dispatch } : FormProps) => {
                         className="border border-slate-300 p-2 rounded-lg"
                         value={activity.name} 
                         onChange={handleChange}   
-                    />
+                    /> 
                 </div>
                 <div className="grid grid-cols-1 gap-3">
                     <label htmlFor="calories" className="font-bold">Calorias</label>
@@ -91,8 +103,8 @@ export const Form = ({ state, dispatch } : FormProps) => {
                         type="number"
                         placeholder="Ej. 300 o 500"
                         className="border border-slate-300 p-2 rounded-lg"
-                        value={activity.calories}
-                        onChange={handleChange}   
+                        value={tempCalories}
+                        onChange={handleChange} 
                     />
                 </div>
                 <input 

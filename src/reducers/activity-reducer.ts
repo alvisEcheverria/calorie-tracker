@@ -2,53 +2,50 @@ import { Activity } from "../types"
 
 export type ActivityActions = 
     { type: "save-activity", payload: { newActivity: Activity }} |
-    { type: "set-activeId", payload:  { id: Activity["id"] }};
+    { type: "set-activeId", payload:  { id: Activity["id"] }} |
+    { type: "remove-activity", payload: { id: Activity["id"] }}
 
 export type ActivityState = {
     activities: Activity[];
     activeId: Activity["id"];
 };
 
+const localStorageActivities = ()=>{
+    const activities = localStorage.getItem("activities");
+    return activities? JSON.parse(activities) : [];
+}
+
 export const initialState: ActivityState = {
-    activities: [],
+    activities: localStorageActivities(),
     activeId: ""
-};
-
-type ActionHandlers = {
-    [Key in ActivityActions['type']]: (
-        state: ActivityState,
-        action: Extract<ActivityActions, { type: Key }>
-    ) => ActivityState;
-};
-
-const actionHandlers: ActionHandlers = {
-    "save-activity": (state, action) => {
-
-    let updatedActivities: Activity[] = [];
-
-    if(state.activeId){
-        updatedActivities = state.activities.map(activity => activity.id === state.activeId? action.payload.newActivity : activity);
-    }  else {
-        updatedActivities = [...state.activities, action.payload.newActivity];
-    } 
-
-    return {
-        ...state,
-        activities: updatedActivities,
-        activeId: ""
-    };
-
-    },
-    "set-activeId": (state, action) => ({
-        ...state,
-        activeId: action.payload.id
-    }),
 };
 
 export const activityReducer = (
     state: ActivityState = initialState,
     action: ActivityActions
 ): ActivityState => {
-    const handler = actionHandlers[action.type];
-    return handler ? handler(state, action) : state;
+    switch (action.type) {
+        case "save-activity":
+            return {
+                ...state,
+                activities: state.activeId
+                    ? state.activities.map(activity => 
+                        activity.id === state.activeId ? action.payload.newActivity : activity)
+                    : [...state.activities, action.payload.newActivity],
+                activeId: ""
+            };
+        case "set-activeId":
+            return {
+                ...state,
+                activeId: action.payload.id
+            };
+        case "remove-activity":
+            return {
+                ...state,
+                activities: state.activities.filter(activity => activity.id !== action.payload.id),
+                activeId: ""
+            };
+        default:
+            return state;
+    }
 };
